@@ -1,2 +1,13 @@
 .DS_Store
 .claude/settings.local.json
+.env*
+*.pem
+*.key
+*.p12
+id_rsa*
+*.log
+node_modules/
+*.sqlite
+*.bak
+*.dump
+_site/

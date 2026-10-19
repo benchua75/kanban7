@@ -1,0 +1,58 @@
+name: CI & Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Project constraint check
+        run: |
+          if grep -nE 'localStorage|sessionStorage|indexedDB|document\.cookie|<link|src="http|innerHTML|@import' index.html; then
+            echo "::error::Constraint violation in index.html (see CLAUDE.md)"; exit 1
+          fi
+      - name: HTML sanity check
+        run: |
+          test -f index.html
+          grep -q '<!DOCTYPE html>' index.html || grep -qi '<!doctype html>' index.html
+          grep -q '<title>' index.html
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage site (index.html only)
+        run: mkdir -p _site && cp index.html _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
