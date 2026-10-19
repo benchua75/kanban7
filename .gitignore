@@ -11,3 +11,4 @@ node_modules/
 *.bak
 *.dump
 _site/
+.playwright-mcp/

@@ -26,8 +26,18 @@ open index.html
 Constraint check (should print nothing):
 
 ```bash
-grep -nE 'localStorage|sessionStorage|indexedDB|document\.cookie|<link|src="http|innerHTML|@import' index.html
+grep -nE 'localStorage|sessionStorage|indexedDB|document\.cookie|<link|src="http|innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function|@import' index.html
 ```
+
+**CSP (must do after every edit to the inline `<script>` or `<style>`):** the page has a strict `<meta>` Content-Security-Policy that allows the inline script/style only by SHA-256 hash, plus Trusted Types. A stale hash means the page silently renders unstyled and/or dead. Refresh it with:
+
+```bash
+python3 scripts/csp-hash.py
+```
+
+CI runs `python3 scripts/csp-hash.py --check`. Under this CSP, `style="…"` attributes in markup, `setAttribute('style'|'on*')`, inline event handlers and any HTML-string sink are blocked; set dynamic styles via `el.style.x` (CSSOM is allowed). Write `\uXXXX` escapes in JS source, never raw U+2028/U+2029 characters (they break regex literals).
+
+Playwright MCP blocks `file://`; for browser testing serve the folder on `127.0.0.1` (e.g. `python3 -m http.server <port> --bind 127.0.0.1`).
 
 ## Script architecture
 
@@ -36,6 +46,10 @@ grep -nE 'localStorage|sessionStorage|indexedDB|document\.cookie|<link|src="http
 - **State:** `projects` (cloned from `SEED`), `filters`, `nextIdNum` (IDs are `PRJ-<n>`), `draggedId`, `editingId`.
 - **Rendering:** `render(focusId?)` rebuilds the whole board and summary from `projects` on every change; there's no diffing. Order of cards within a column = order in the `projects` array. DOM is built with `el()` + `textContent` (no `innerHTML`, to avoid XSS from user input).
 - **Moves:** all stage changes go through `moveProject(id, status, beforeId)`, which reorders the array, forces progress to 100 for Done, and toasts. Used by HTML5 drag-and-drop (delegated listeners on `#board`), Alt+←/→ keyboard moves, and the detail dialog.
+- **Sanitising:** every write to the model goes through `sanitizeProject()` (allow-lists `STATUS_KEYS`/`PRIORITIES`/`RAGS`/`DEPARTMENTS` because they end up in `className`; `cleanLine`/`cleanBlock` strip control and bidi chars; dates, numbers, tags clamped). Keep it that way for any new field.
+- **Chart:** `renderChart()` (called from `render()`, and on `ResizeObserver` width changes) draws an inline-SVG stacked bar of the filtered projects per stage × RAG, metric `chartMetric` = `count`|`budget`, with a `<details>` data-table fallback. Clicking a bar calls `scrollToColumn`.
+- **Theme:** dark by default (`<html data-theme="dark">`); `[data-theme="light"]` overrides the `:root` tokens. The toggle is in memory only, like everything else. Use tokens, not raw hex, in new CSS.
+- **Mobile (≤760px):** the board becomes horizontal scroll-snap columns with sticky `#stage-tabs` (active tab tracked by `IntersectionObserver`); cards show `.card-actions` ‹ › move buttons on touch/small screens (`data-move` → `moveProject`); dialogs go full-screen.
 - **Dialogs:** native `<dialog>` with `showModal()`; `[data-close]` elements and backdrop clicks close them; focus returns to the trigger card (re-found by `editingId` after re-render).
 - **FormSubmit flow:** `formNew` submit → validate → JSON POST with `_subject`, `_template: 'table'`, `_captcha: 'false'`, `_honey` honeypot. On `success === "true"` → `addRequestToBoard(d, true)` (adds to Backlog). On error/network failure → `showSubmitError` and reveal the local-add button. FormSubmit may reject `file://` (null origin) requests; the error path covers this.
 
