@@ -10,6 +10,8 @@ A single-file IT project management Kanban board for tracking a bank IT portfoli
 
 **<https://benchua75.github.io/kanban7/>**
 
+![Northbridge Bank IT PMO project board showing Backlog, Initiation, In Progress, UAT / Testing and Done columns with project cards](docs/screenshot.png)
+
 ## Features
 
 - **Kanban stages:** Backlog → Initiation → In Progress → UAT / Testing → Done
@@ -57,6 +59,8 @@ There's no `npm install` and no build step.
 ├── index.html                    # The whole app (markup + CSS + JS)
 ├── README.md
 ├── CLAUDE.md                     # Notes and constraints for AI-assisted development
+├── docs/screenshot.png           # README screenshot (captured with the Playwright MCP server)
+├── .mcp.json                     # Project-scoped MCP servers (Playwright)
 ├── .github/workflows/ci-pages.yml
 └── .claude/commands/             # Claude Code slash commands
 ```

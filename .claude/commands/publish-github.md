@@ -1,7 +1,7 @@
 ---
 description: Security-scan, push to GitHub, write README/About, enable Pages, add CI/CD
 argument-hint: [owner/repo or repo URL] [public|private]
-allowed-tools: Bash(git:*), Bash(gh:*), Bash(grep:*), Bash(curl:*), Bash(gitleaks:*), Bash(command:*), Bash(ls:*), Bash(mkdir:*), Read, Write, Edit, Glob, Grep
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(grep:*), Bash(curl:*), Bash(gitleaks:*), Bash(command:*), Bash(ls:*), Bash(mkdir:*), Bash(rm:*), Read, Write, Edit, Glob, Grep, mcp__playwright__browser_navigate, mcp__playwright__browser_resize, mcp__playwright__browser_wait_for, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_close
 ---
 
 # Publish this project to GitHub
@@ -68,6 +68,7 @@ If `README.md` exists, read it first and keep sections the user wrote. Otherwise
   - Pages: `[![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-blue?logo=github)](PAGES_URL)`
   - License badge, only if a LICENSE file exists or the user wants one added
 - **Live demo:** a link to `PAGES_URL`.
+- **Screenshot:** `![<short description of the board>](docs/screenshot.png)` directly under the live demo link (captured in step 2b).
 - **Features:** taken from `index.html` and `CLAUDE.md` (Kanban stages, WIP limit, drag-and-drop, Alt+←/→ keyboard moves, filters, RAG/priority, detail dialog, new project request form via FormSubmit, summary).
 - **Tech stack:** a single `index.html` with vanilla HTML/CSS/JS, no frameworks, build, CDN or external assets.
 - **Installation:**
@@ -80,9 +81,23 @@ If `README.md` exists, read it first and keep sections the user wrote. Otherwise
   - Double-click `index.html`, or `open index.html` (macOS), `start index.html` (Windows) or `xdg-open index.html` (Linux).
   - Or use the live demo at `PAGES_URL`.
   - Notes: there's no persistence, so a refresh resets to the seed data. To make the request form send email, set `FORMSUBMIT_EMAIL` in `index.html` and confirm FormSubmit's activation email.
-- **Project structure:** a short tree.
+- **Project structure:** a short tree, including `docs/screenshot.png` and `.mcp.json`.
 - **CI/CD:** a short description of the workflow from step 3.
 - **Disclaimer:** fictitious bank, not affiliated with any real institution.
+
+## Step 2b: Capture the README screenshot (Playwright MCP)
+
+Use the project's Playwright MCP server (`.mcp.json`) to capture the board and keep `docs/screenshot.png` current.
+
+1. If the `mcp__playwright__*` tools aren't available, tell the user to install Node.js, restart the session and approve the `playwright` server. Skip this step (keep any existing screenshot) rather than failing the whole publish.
+2. `mkdir -p docs`.
+3. `mcp__playwright__browser_resize` to `width: 1440`, `height: 900`.
+4. `mcp__playwright__browser_navigate` to `file://<absolute repo root>/index.html`, so the screenshot shows the code you're about to push. If `file://` is blocked, use `PAGES_URL` instead, but only once it serves the current version.
+5. `mcp__playwright__browser_wait_for` with `time: 1` so the board finishes rendering.
+6. `mcp__playwright__browser_take_screenshot` with `type: "png"` and `filename: "<absolute repo root>/docs/screenshot.png"`. Use the viewport, not `fullPage`.
+7. `mcp__playwright__browser_close`.
+8. Read the image back and check that it shows the board with all five columns and the seed data, and no error, blank page or open dialog. Delete any stray `page-*.yml` snapshot files the server wrote under the repo.
+9. Make sure `README.md` embeds it as described in step 2.
 
 ## Step 3: CI/CD with GitHub Actions
 
@@ -153,7 +168,7 @@ Only `index.html` is published to Pages. `CLAUDE.md`, `.claude/` and other repo 
 
 ## Step 4: Commit and push
 
-1. Stage only these files, by explicit path: `README.md`, `.github/workflows/ci-pages.yml`, `.gitignore`, and any file the user asked for (for example `LICENSE`). Also stage `.claude/commands/publish-github.md` if it isn't committed yet.
+1. Stage only these files, by explicit path: `README.md`, `.github/workflows/ci-pages.yml`, `.gitignore`, `docs/screenshot.png`, `.mcp.json`, and any file the user asked for (for example `LICENSE`). Also stage `.claude/commands/publish-github.md` if it isn't committed yet.
 2. Re-run the step 1 secret and sensitive-file checks on `git diff --cached`. Stop if anything turns up.
 3. Commit with a clear message that ends with the attribution trailer the session requires.
 4. Push:
