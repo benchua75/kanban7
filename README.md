@@ -24,6 +24,8 @@ A single-file IT project management Kanban board for tracking a bank IT portfoli
 - **New project request form** that emails the request through [FormSubmit](https://formsubmit.co/) and adds it to the Backlog
 - **Portfolio summary:** total and active projects, active budget, overdue count and Red-status count
 - **Portfolio health chart:** an inline-SVG stacked bar of projects per stage split by RAG, switchable between count and budget, with tooltips, keyboard focus and a data-table fallback. Click a bar to jump to that column.
+- **WhatsApp chat button:** a floating button that opens a WhatsApp chat with the PMO in a new tab, and speaks a short greeting where the browser supports speech synthesis
+- **Security briefing notice:** a one-time dialog shown 10 seconds after the page loads, or once any open dialog closes
 - **Dark mode** by default, with a light theme toggle (in memory only)
 - **Mobile layout:** swipeable scroll-snap columns, sticky stage tabs, ‹ › move buttons on touch screens and full-screen dialogs
 - **Security hardening:** strict hashed Content-Security-Policy with Trusted Types, input sanitising and client-side form abuse controls. See [SECURITY.md](SECURITY.md).

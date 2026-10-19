@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-v2jwSNJvcmj2BQQ8RIrKSaE+RQIIiCJVIKHEozXOcV8='; style-src 'sha256-/CcRz7REVvUdYJD0os2vU3TNDPf/yLknIr0Hmq4zF2M='; connect-src https://formsubmit.co; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mqkyFMhGKMOBWdfeumimp6boxUu/eJd3tcfpIQ4AS+M='; style-src 'sha256-XxT5fm14J1+YumzN3Lyvy3UhPFSMmqy1pRCkS5YXg0c='; connect-src https://formsubmit.co; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="referrer" content="no-referrer">
@@ -52,6 +52,9 @@
     --track: #24344f;
     --backdrop: rgba(3, 8, 20, .7);
     --toast-bg: #1d2b48;
+    --chat-bg: #1f9d55;
+    --chat-hover: #24b562;
+    --on-chat: #ffffff;
     --radius: 10px;
     --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 4px 12px rgba(0, 0, 0, .25);
     --ring: #8cb8ff;
@@ -95,6 +98,9 @@
     --track: #e3e9f2;
     --backdrop: rgba(11, 42, 91, .45);
     --toast-bg: #0b2a5b;
+    --chat-bg: #167a42;
+    --chat-hover: #1a8c4c;
+    --on-chat: #ffffff;
     --shadow: 0 1px 2px rgba(11, 42, 91, .08), 0 2px 6px rgba(11, 42, 91, .06);
     --ring: #1257b0;
   }
@@ -465,10 +471,13 @@
   .alert code { font-size: 12px; }
   .alert.warn { background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text); }
   .alert.error { background: var(--error-bg); border: 1px solid var(--error-border); color: var(--error-text); }
+  #dlg-briefing { width: min(440px, calc(100vw - 32px)); }
+  .briefing-body { grid-template-columns: 1fr; }
+  .briefing-body .alert { font-size: 15px; padding: 12px 14px; line-height: 1.5; }
   .honey { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
   /* ---- Toasts ---------------------------------------------------------------- */
-  .toasts { position: fixed; right: 16px; bottom: calc(16px + var(--safe-b)); display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+  .toasts { position: fixed; right: 16px; bottom: calc(88px + var(--safe-b)); display: flex; flex-direction: column; gap: 8px; z-index: 50; }
   .toast {
     background: var(--toast-bg); color: #fff; padding: 10px 14px; border-radius: 8px;
     border: 1px solid var(--border-strong);
@@ -478,7 +487,28 @@
   .toast.error { background: #a3212b; border-color: #c2362f; }
   @keyframes toast-in { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
 
-  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 10px 20px calc(18px + var(--safe-b)); }
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 10px 20px calc(80px + var(--safe-b)); }
+
+  /* ---- Floating WhatsApp chat button ---------------------------------------- */
+  .chat-fab {
+    position: fixed; right: calc(16px + var(--safe-r)); bottom: calc(16px + var(--safe-b)); z-index: 60;
+    width: 60px; height: 60px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--chat-bg); color: var(--on-chat); text-decoration: none;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+    transition: background var(--ease), transform var(--ease);
+  }
+  .chat-fab:hover { background: var(--chat-hover); transform: translateY(-2px); }
+  .chat-fab:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+  .chat-fab svg.ico { width: 28px; height: 28px; }
+  .chat-fab .chat-tip {
+    position: absolute; right: calc(100% + 10px); top: 50%; transform: translateY(-50%);
+    white-space: nowrap; pointer-events: none; opacity: 0;
+    background: var(--toast-bg); color: #fff; border: 1px solid var(--border-strong);
+    padding: 6px 10px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    box-shadow: var(--shadow); transition: opacity var(--ease);
+  }
+  .chat-fab:hover .chat-tip, .chat-fab:focus-visible .chat-tip { opacity: 1; }
 
   /* Shown only if the page is loaded inside a frame (clickjacking guard). */
   .frame-block {
@@ -552,7 +582,9 @@
     .dlg-foot .btn { flex: 1 1 auto; }
     .dlg-foot .spacer { display: none; }
 
-    .toasts { left: 12px; right: 12px; bottom: calc(12px + var(--safe-b)); }
+    .toasts { left: 12px; right: 12px; bottom: calc(80px + var(--safe-b)); }
+    .chat-fab { right: calc(12px + var(--safe-r)); bottom: calc(12px + var(--safe-b)); width: 56px; height: 56px; }
+    .chat-fab .chat-tip { display: none; }
     .toast { max-width: none; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -634,6 +666,11 @@
 <footer>Northbridge Bank is fictitious. Internal demo / training tool — not an official system.</footer>
 
 <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<a class="chat-fab" id="chat-fab" href="https://wa.me/6598274220?text=Hi%2C%20I%20have%20a%20question%20about%20the%20IT%20PMO%20project%20board." target="_blank" rel="noopener noreferrer" aria-label="Chat with the PMO on WhatsApp (opens in a new tab)">
+  <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5z"/><path d="M8.5 10h7M8.5 13.5h4.5"/></svg>
+  <span class="chat-tip" aria-hidden="true">Chat with us on WhatsApp</span>
+</a>
 
 <!-- Project detail / edit dialog -->
 <dialog id="dlg-detail" aria-labelledby="detail-title">
@@ -759,6 +796,24 @@
       <span class="spacer"></span>
       <button type="button" class="btn btn-ghost" data-close>Cancel</button>
       <button type="submit" class="btn btn-primary" id="btn-submit-new">Submit request</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- IT security briefing notice (shown once per page load after 10s) -->
+<dialog id="dlg-briefing" role="alertdialog" aria-labelledby="briefing-title" aria-describedby="briefing-text">
+  <form method="dialog">
+    <div class="dlg-head">
+      <h2 id="briefing-title">Mandatory IT security briefing</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Close">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="dlg-body briefing-body">
+      <p id="briefing-text" class="alert warn">There is an <strong>IT security briefing</strong> at the <strong>Town Hall</strong> on <strong>Wednesday at 10am</strong>. Attendance is mandatory.</p>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn btn-primary" data-close>Got it</button>
     </div>
   </form>
 </dialog>
@@ -1648,12 +1703,37 @@
     addRequestToBoard(readNewForm(), false);
   });
 
+  // ---- Chat button: spoken greeting, then the link opens WhatsApp ----------
+  $('#chat-fab').addEventListener('click', function () {
+    if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance !== 'function') return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance('How can I help you?');
+    u.lang = 'en-US';
+    u.rate = 1;
+    window.speechSynthesis.speak(u);
+  });
+
   // ---- Filters -------------------------------------------------------------
   fillSelect($('#filter-priority'), PRIORITIES);
   fillSelect($('#filter-dept'), DEPARTMENTS);
   $('#search').addEventListener('input', function (e) { filters.q = cleanLine(e.target.value, 80).toLowerCase(); render(); });
   $('#filter-priority').addEventListener('change', function (e) { filters.priority = oneOf(e.target.value, PRIORITIES, ''); render(); });
   $('#filter-dept').addEventListener('change', function (e) { filters.dept = oneOf(e.target.value, DEPARTMENTS, ''); render(); });
+
+  // ---- IT security briefing notice -------------------------------------------
+  // Shown once per page load after the user has been on the page for 10s.
+  // If another dialog is open at that moment, wait until it closes.
+  const BRIEFING_DELAY_MS = 10000;
+  const dlgBriefing = $('#dlg-briefing');
+  function showBriefing() {
+    const busy = document.querySelector('dialog[open]');
+    if (busy) {
+      busy.addEventListener('close', showBriefing, { once: true });
+      return;
+    }
+    openDialog(dlgBriefing);
+  }
+  setTimeout(showBriefing, BRIEFING_DELAY_MS);
 
   render();
 })();
