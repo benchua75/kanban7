@@ -26,9 +26,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Project constraint check
         run: |
-          if grep -nE 'localStorage|sessionStorage|indexedDB|document\.cookie|<link|src="http|innerHTML|@import' index.html; then
+          if grep -nE 'localStorage|sessionStorage|indexedDB|document\.cookie|<link|src="http|innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function|@import' index.html; then
             echo "::error::Constraint violation in index.html (see CLAUDE.md)"; exit 1
           fi
+      - name: CSP hash check
+        run: python3 scripts/csp-hash.py --check
       - name: HTML sanity check
         run: |
           test -f index.html
