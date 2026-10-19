@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northbridge Bank IT PMO — Project Board (Demo)</title>
+<style>
+  :root {
+    --navy: #0b2a5b;
+    --navy-2: #123a78;
+    --primary: #1257b0;
+    --primary-hover: #0e4791;
+    --light: #e8f0fb;
+    --bg: #f3f6fa;
+    --surface: #ffffff;
+    --border: #d5deea;
+    --text: #1a2433;
+    --muted: #5b6878;
+    --green: #1e8a4c;
+    --amber: #c27c0e;
+    --red: #c2362f;
+    --p-critical: #8f1d1d;
+    --p-high: #c2362f;
+    --p-medium: #c27c0e;
+    --p-low: #4f6b8a;
+    --radius: 8px;
+    --shadow: 0 1px 2px rgba(11, 42, 91, .08), 0 2px 6px rgba(11, 42, 91, .06);
+    --focus: 0 0 0 3px rgba(18, 87, 176, .45);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--text);
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: none; box-shadow: var(--focus); }
+
+  /* Header */
+  .app-header {
+    background: var(--navy);
+    color: #fff;
+    padding: 12px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+  }
+  .brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-right: auto; }
+  .wordmark { font-size: 20px; letter-spacing: .2px; margin: 0; }
+  .wordmark strong { font-weight: 700; }
+  .wordmark span { font-weight: 300; opacity: .9; }
+  .demo-tag {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .25);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .search { position: relative; }
+  .search svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); opacity: .7; pointer-events: none; }
+  .toolbar input[type="search"], .toolbar select {
+    height: 34px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, .25);
+    background: var(--navy-2);
+    color: #fff;
+    padding: 0 10px;
+  }
+  .toolbar input[type="search"] { padding-left: 30px; width: 220px; }
+  .toolbar input::placeholder { color: rgba(255, 255, 255, .65); }
+  .toolbar select option { color: var(--text); background: #fff; }
+
+  .btn {
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-accent { background: #fff; color: var(--navy); }
+  .btn-accent:hover { background: var(--light); }
+  .btn-ghost { background: transparent; border-color: var(--border); color: var(--text); }
+  .btn-ghost:hover { background: var(--light); }
+  .btn-danger { background: transparent; border-color: #e8b9b6; color: var(--red); }
+  .btn-danger:hover { background: #fbeceb; }
+  .btn[disabled] { opacity: .6; cursor: progress; }
+
+  /* Notice + summary */
+  .notice {
+    background: var(--light);
+    color: var(--navy);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 20px;
+    font-size: 13px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 20px 0;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    min-width: 120px;
+    box-shadow: var(--shadow);
+  }
+  .stat .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .stat .value { font-size: 18px; font-weight: 700; color: var(--navy); }
+  .stat.warn .value { color: var(--red); }
+  .hint { padding: 8px 20px 0; color: var(--muted); font-size: 12px; }
+  kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 0 4px;
+    background: #fff;
+  }
+
+  /* Board */
+  main { flex: 1; }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(250px, 1fr));
+    gap: 14px;
+    padding: 14px 20px 20px;
+    overflow-x: auto;
+    align-items: start;
+  }
+  .column {
+    background: #e9eef5;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+  }
+  .column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    border-top: 4px solid var(--primary);
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: var(--surface);
+  }
+  .column-header h2 { font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: .5px; color: var(--navy); }
+  .count {
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--light);
+    color: var(--navy);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+  .column.over-wip .column-header { border-top-color: var(--amber); }
+  .column.over-wip .count { background: #fbefd9; color: #7a4c05; }
+  .column-body { padding: 10px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 120px; transition: background .15s; }
+  .column.drag-over .column-body { background: #dbe7f8; outline: 2px dashed var(--primary); outline-offset: -6px; border-radius: 0 0 var(--radius) var(--radius); }
+  .empty { color: var(--muted); font-size: 12px; text-align: center; padding: 20px 6px; border: 1px dashed var(--border); border-radius: 6px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--p-low);
+    border-radius: 6px;
+    padding: 10px 12px;
+    box-shadow: var(--shadow);
+    cursor: grab;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .card:hover { border-color: #b7c6da; }
+  .card.p-Critical { border-left-color: var(--p-critical); }
+  .card.p-High { border-left-color: var(--p-high); }
+  .card.p-Medium { border-left-color: var(--p-medium); }
+  .card.p-Low { border-left-color: var(--p-low); }
+  .card.dragging { opacity: .45; }
+  .card-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .card-id { font-size: 11px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .card-title { font-weight: 600; font-size: 14px; color: var(--text); margin: 0; }
+  .card-meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--muted); }
+  .pill {
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 1px 8px;
+    color: #fff;
+    background: var(--p-low);
+  }
+  .pill.p-Critical { background: var(--p-critical); }
+  .pill.p-High { background: var(--p-high); }
+  .pill.p-Medium { background: var(--p-medium); }
+  .rag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+  .rag::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--green); }
+  .rag.Amber::before { background: var(--amber); }
+  .rag.Red::before { background: var(--red); }
+  .owner { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+  .owner span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--navy-2); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex: none;
+  }
+  .due { white-space: nowrap; }
+  .due.overdue { color: var(--red); font-weight: 600; }
+  .progress { height: 6px; border-radius: 3px; background: #e3e9f2; overflow: hidden; }
+  .progress > div { height: 100%; background: var(--primary); }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { font-size: 11px; background: var(--light); color: var(--navy); border-radius: 4px; padding: 0 6px; }
+
+  /* Dialogs */
+  dialog {
+    border: none;
+    border-radius: 10px;
+    padding: 0;
+    width: min(640px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    box-shadow: 0 10px 40px rgba(11, 42, 91, .3);
+    color: var(--text);
+  }
+  dialog::backdrop { background: rgba(11, 42, 91, .45); }
+  .dlg-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 18px; background: var(--navy); color: #fff;
+  }
+  .dlg-head h2 { margin: 0; font-size: 16px; }
+  .icon-btn {
+    background: transparent; border: none; color: inherit; cursor: pointer;
+    width: 30px; height: 30px; border-radius: 6px; font-size: 18px; line-height: 1;
+  }
+  .icon-btn:hover { background: rgba(255, 255, 255, .15); }
+  .dlg-body { padding: 16px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .field label .req { color: var(--red); }
+  .field input, .field select, .field textarea {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 9px;
+    background: #fff;
+    min-height: 34px;
+  }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); }
+  .dlg-foot {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center;
+    padding: 12px 18px; border-top: 1px solid var(--border); background: #f8fafd;
+  }
+  .dlg-foot .spacer { flex: 1; }
+  .form-note { grid-column: 1 / -1; font-size: 12px; color: var(--muted); margin: 0; }
+  .alert {
+    grid-column: 1 / -1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    margin: 0;
+  }
+  .alert.warn { background: #fdf3e1; border: 1px solid #f0d49c; color: #6b4304; }
+  .alert.error { background: #fbeceb; border: 1px solid #ecbcb8; color: #7d1f1a; }
+  .hidden { display: none !important; }
+  .honey { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  /* Toasts */
+  .toasts { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+  .toast {
+    background: var(--navy); color: #fff; padding: 10px 14px; border-radius: 6px;
+    box-shadow: var(--shadow); max-width: 340px; font-size: 13px;
+    animation: toast-in .2s ease-out;
+  }
+  .toast.error { background: var(--red); }
+  @keyframes toast-in { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 10px 20px 18px; }
+
+  @media (max-width: 700px) {
+    .app-header { padding: 12px 16px; }
+    .toolbar { width: 100%; }
+    .toolbar .search { flex: 1 1 100%; }
+    .toolbar input[type="search"] { width: 100%; }
+    .toolbar select { flex: 1; min-width: 0; }
+    .toolbar .btn { flex: 1 1 100%; justify-content: center; }
+    .notice, .summary, .hint { padding-left: 16px; padding-right: 16px; }
+    .board { grid-template-columns: 1fr; padding: 14px 16px 20px; overflow-x: visible; }
+    .dlg-body { grid-template-columns: 1fr; }
+    .stat { flex: 1 1 calc(50% - 10px); min-width: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <h1 class="wordmark"><strong>Northbridge Bank</strong> <span>IT PMO</span></h1>
+    <span class="demo-tag">Demo / training tool — fictitious bank</span>
+  </div>
+  <div class="toolbar" role="search">
+    <div class="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input type="search" id="search" placeholder="Search title, ID, owner, tag…" aria-label="Search projects">
+    </div>
+    <select id="filter-priority" aria-label="Filter by priority">
+      <option value="">All priorities</option>
+    </select>
+    <select id="filter-dept" aria-label="Filter by department">
+      <option value="">All departments</option>
+    </select>
+    <button type="button" class="btn btn-accent" id="btn-new">
+      <span aria-hidden="true">＋</span> New project request
+    </button>
+  </div>
+</header>
+
+<div class="notice" role="note">
+  <span aria-hidden="true">ⓘ</span>
+  <span><strong>Demo mode:</strong> board data is held in memory only. Refreshing the page resets it to the sample data.</span>
+</div>
+
+<main>
+  <section class="summary" id="summary" aria-label="Portfolio summary"></section>
+  <p class="hint">Drag cards between columns, or focus a card and press <kbd>Alt</kbd>+<kbd>←</kbd>/<kbd>→</kbd> to move it. Press <kbd>Enter</kbd> to open details.</p>
+  <section class="board" id="board" aria-label="Project Kanban board"></section>
+</main>
+
+<footer>Northbridge Bank is fictitious. Internal demo / training tool — not an official system.</footer>
+
+<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<!-- Project detail / edit dialog -->
+<dialog id="dlg-detail" aria-labelledby="detail-title">
+  <form id="form-detail" method="dialog" novalidate>
+    <div class="dlg-head">
+      <h2 id="detail-title">Project</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Close">✕</button>
+    </div>
+    <div class="dlg-body">
+      <div class="field full">
+        <label for="d-title">Title <span class="req">*</span></label>
+        <input id="d-title" name="title" required maxlength="120">
+      </div>
+      <div class="field">
+        <label for="d-status">Stage</label>
+        <select id="d-status" name="status"></select>
+      </div>
+      <div class="field">
+        <label for="d-priority">Priority</label>
+        <select id="d-priority" name="priority"></select>
+      </div>
+      <div class="field">
+        <label for="d-rag">RAG status</label>
+        <select id="d-rag" name="rag"></select>
+      </div>
+      <div class="field">
+        <label for="d-dept">Department</label>
+        <select id="d-dept" name="dept"></select>
+      </div>
+      <div class="field">
+        <label for="d-owner">Project manager</label>
+        <input id="d-owner" name="owner" maxlength="60">
+      </div>
+      <div class="field">
+        <label for="d-due">Target date</label>
+        <input id="d-due" name="due" type="date">
+      </div>
+      <div class="field">
+        <label for="d-progress">Progress (%)</label>
+        <input id="d-progress" name="progress" type="number" min="0" max="100" step="5">
+      </div>
+      <div class="field">
+        <label for="d-budget">Budget (SGD)</label>
+        <input id="d-budget" name="budget" type="number" min="0" step="1000">
+      </div>
+      <div class="field full">
+        <label for="d-tags">Tags (comma separated)</label>
+        <input id="d-tags" name="tags" maxlength="200">
+      </div>
+      <div class="field full">
+        <label for="d-desc">Description</label>
+        <textarea id="d-desc" name="description" maxlength="2000"></textarea>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn btn-danger" id="btn-delete">🗑 Delete</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="submit" class="btn btn-primary">Save changes</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- New project request dialog (FormSubmit) -->
+<dialog id="dlg-new" aria-labelledby="new-title">
+  <form id="form-new" novalidate>
+    <div class="dlg-head">
+      <h2 id="new-title">New IT project request</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Close">✕</button>
+    </div>
+    <div class="dlg-body">
+      <p class="alert warn hidden" id="new-config-warn">
+        FormSubmit is not configured yet: set <code>FORMSUBMIT_EMAIL</code> at the top of the script to a real inbox. Until then requests can only be added to the board locally.
+      </p>
+      <div class="field full">
+        <label for="n-title">Project title <span class="req">*</span></label>
+        <input id="n-title" name="project_title" required maxlength="120" placeholder="e.g. Branch teller system upgrade">
+      </div>
+      <div class="field">
+        <label for="n-name">Requester name <span class="req">*</span></label>
+        <input id="n-name" name="requester_name" required maxlength="60" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="n-email">Requester email <span class="req">*</span></label>
+        <input id="n-email" name="email" type="email" required maxlength="120" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="n-dept">Department</label>
+        <select id="n-dept" name="department"></select>
+      </div>
+      <div class="field">
+        <label for="n-priority">Priority</label>
+        <select id="n-priority" name="priority"></select>
+      </div>
+      <div class="field">
+        <label for="n-due">Target date</label>
+        <input id="n-due" name="target_date" type="date">
+      </div>
+      <div class="field">
+        <label for="n-budget">Estimated budget (SGD)</label>
+        <input id="n-budget" name="estimated_budget" type="number" min="0" step="1000">
+      </div>
+      <div class="field full">
+        <label for="n-just">Business justification <span class="req">*</span></label>
+        <textarea id="n-just" name="business_justification" required maxlength="2000" placeholder="What problem does this solve? Regulatory, risk or customer drivers?"></textarea>
+      </div>
+      <div class="honey" aria-hidden="true">
+        <label for="n-honey">Leave this empty</label>
+        <input id="n-honey" name="_honey" tabindex="-1" autocomplete="off">
+      </div>
+      <p class="alert error hidden" id="new-error" role="alert"></p>
+      <p class="form-note">Submissions are sent via FormSubmit (formsubmit.co). The first submission triggers a one-time activation email to the configured PMO address.</p>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn btn-ghost hidden" id="btn-add-local">Add to board without sending</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="submit" class="btn btn-primary" id="btn-submit-new">Submit request</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---- Configuration -------------------------------------------------------
+  // TODO: replace with the PMO inbox that should receive project requests.
+  const FORMSUBMIT_EMAIL = 'pmo-demo@example.com';
+  const FORMSUBMIT_PLACEHOLDER = 'pmo-demo@example.com';
+  const FORMSUBMIT_URL = 'https://formsubmit.co/ajax/' + encodeURIComponent(FORMSUBMIT_EMAIL);
+
+  const COLUMNS = [
+    { key: 'backlog', name: 'Backlog' },
+    { key: 'initiation', name: 'Initiation' },
+    { key: 'progress', name: 'In Progress', wip: 5 },
+    { key: 'uat', name: 'UAT / Testing' },
+    { key: 'done', name: 'Done' }
+  ];
+  const PRIORITIES = ['Critical', 'High', 'Medium', 'Low'];
+  const RAGS = ['Green', 'Amber', 'Red'];
+  const DEPARTMENTS = [
+    'Core Banking', 'Digital Channels', 'Infrastructure', 'Cyber Security',
+    'Data & Analytics', 'Risk & Compliance', 'Payments', 'Corporate Functions'
+  ];
+
+  // ---- Seed data (in memory only; a refresh restores this) -----------------
+  const SEED = [
+    { id: 'PRJ-1001', title: 'Core banking quarterly patch (Q4)', status: 'progress', priority: 'High', rag: 'Green', dept: 'Core Banking', owner: 'Aisha Rahman', due: '2026-11-14', progress: 55, budget: 180000, tags: ['patching', 'core'], description: 'Apply vendor Q4 cumulative patch to core banking platform across SIT, UAT and PROD.' },
+    { id: 'PRJ-1002', title: 'Workforce MFA rollout (phase 2)', status: 'uat', priority: 'Critical', rag: 'Amber', dept: 'Cyber Security', owner: 'Daniel Tan', due: '2026-10-31', progress: 80, budget: 420000, tags: ['MFA', 'identity'], description: 'Extend phishing-resistant MFA to remaining 3,000 staff and contractors.' },
+    { id: 'PRJ-1003', title: 'Data centre migration — wave 3', status: 'progress', priority: 'Critical', rag: 'Red', dept: 'Infrastructure', owner: 'Priya Nair', due: '2026-10-10', progress: 40, budget: 1250000, tags: ['DC', 'migration'], description: 'Migrate 140 remaining workloads from legacy DC to primary hosting site.' },
+    { id: 'PRJ-1004', title: 'AML transaction monitoring rules upgrade', status: 'initiation', priority: 'High', rag: 'Green', dept: 'Risk & Compliance', owner: 'Marcus Lim', due: '2027-02-28', progress: 10, budget: 650000, tags: ['AML', 'regulatory'], description: 'Upgrade rules engine and tune scenarios per latest regulatory guidance.' },
+    { id: 'PRJ-1005', title: 'Mobile banking app 6.2 release', status: 'uat', priority: 'High', rag: 'Green', dept: 'Digital Channels', owner: 'Chloe Wong', due: '2026-11-05', progress: 85, budget: 300000, tags: ['mobile', 'release'], description: 'Quarterly feature release: card controls, spending insights, accessibility fixes.' },
+    { id: 'PRJ-1006', title: 'Open API gateway modernisation', status: 'backlog', priority: 'Medium', rag: 'Green', dept: 'Digital Channels', owner: 'Ravi Kumar', due: '2027-04-30', progress: 0, budget: 520000, tags: ['API', 'platform'], description: 'Replace end-of-support API gateway; add rate limiting and developer portal.' },
+    { id: 'PRJ-1007', title: 'Annual disaster recovery test', status: 'done', priority: 'High', rag: 'Green', dept: 'Infrastructure', owner: 'Siti Hamid', due: '2026-09-20', progress: 100, budget: 90000, tags: ['DR', 'BCP'], description: 'Full failover test of tier-1 systems to secondary site.' },
+    { id: 'PRJ-1008', title: 'Real-time payments ISO 20022 uplift', status: 'progress', priority: 'Critical', rag: 'Amber', dept: 'Payments', owner: 'Kevin Ong', due: '2026-12-15', progress: 60, budget: 980000, tags: ['ISO 20022', 'payments'], description: 'Migrate payment messaging to ISO 20022 for domestic and cross-border rails.' },
+    { id: 'PRJ-1009', title: 'Enterprise data lake cost optimisation', status: 'backlog', priority: 'Low', rag: 'Green', dept: 'Data & Analytics', owner: 'Mei Ling Goh', due: '2027-03-31', progress: 0, budget: 75000, tags: ['cloud', 'FinOps'], description: 'Right-size storage tiers and compute clusters; target 20% run-cost reduction.' },
+    { id: 'PRJ-1010', title: 'HR system SaaS migration', status: 'initiation', priority: 'Medium', rag: 'Amber', dept: 'Corporate Functions', owner: 'Jason Lee', due: '2027-01-31', progress: 15, budget: 260000, tags: ['SaaS', 'HR'], description: 'Move on-premise HR and payroll to SaaS; data migration and integrations.' },
+    { id: 'PRJ-1011', title: 'Privileged access management refresh', status: 'progress', priority: 'High', rag: 'Green', dept: 'Cyber Security', owner: 'Daniel Tan', due: '2026-12-01', progress: 35, budget: 340000, tags: ['PAM', 'identity'], description: 'Vault rotation for service accounts, session recording for admin access.' },
+    { id: 'PRJ-1012', title: 'Credit risk model platform (MLOps)', status: 'backlog', priority: 'Medium', rag: 'Green', dept: 'Data & Analytics', owner: 'Ahmad Faiz', due: '2027-06-30', progress: 0, budget: 410000, tags: ['ML', 'risk'], description: 'Model registry, monitoring and governed deployment pipeline for credit models.' },
+    { id: 'PRJ-1013', title: 'Branch network SD-WAN upgrade', status: 'done', priority: 'Medium', rag: 'Green', dept: 'Infrastructure', owner: 'Siti Hamid', due: '2026-08-29', progress: 100, budget: 220000, tags: ['network'], description: 'Replace MPLS links at 38 branches with SD-WAN.' },
+    { id: 'PRJ-1014', title: 'Regulatory reporting automation', status: 'uat', priority: 'High', rag: 'Red', dept: 'Risk & Compliance', owner: 'Marcus Lim', due: '2026-10-15', progress: 70, budget: 380000, tags: ['regulatory', 'reporting'], description: 'Automate monthly prudential returns; remove manual spreadsheet steps.' }
+  ];
+
+  let projects = SEED.map(function (p) { return Object.assign({}, p, { tags: p.tags.slice() }); });
+  let nextIdNum = Math.max.apply(null, SEED.map(function (p) { return parseInt(p.id.slice(4), 10); })) + 1;
+  const filters = { q: '', priority: '', dept: '' };
+  let draggedId = null;
+  let editingId = null;
+
+  // ---- Helpers -------------------------------------------------------------
+  const $ = function (sel) { return document.querySelector(sel); };
+  const sgd = new Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD', maximumFractionDigits: 0 });
+  const sgdShort = new Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD', notation: 'compact', maximumFractionDigits: 1 });
+  const dateFmt = new Intl.DateTimeFormat('en-SG', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function todayISO() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function isOverdue(p) { return p.status !== 'done' && p.due && p.due < todayISO(); }
+  function formatDate(iso) {
+    if (!iso) return 'No date';
+    const parts = iso.split('-').map(Number);
+    return dateFmt.format(new Date(parts[0], parts[1] - 1, parts[2]));
+  }
+  function initials(name) {
+    return (name || '?').trim().split(/\s+/).slice(0, 2).map(function (s) { return s[0]; }).join('').toUpperCase();
+  }
+  function findProject(id) { return projects.find(function (p) { return p.id === id; }); }
+  function columnName(key) { return COLUMNS.find(function (c) { return c.key === key; }).name; }
+  function fillSelect(select, values, labels) {
+    values.forEach(function (v, i) {
+      const o = el('option', null, labels ? labels[i] : v);
+      o.value = v;
+      select.appendChild(o);
+    });
+  }
+  function parseTags(s) {
+    return s.split(',').map(function (t) { return t.trim(); }).filter(Boolean).slice(0, 8);
+  }
+  function toast(msg, isError) {
+    const t = el('div', 'toast' + (isError ? ' error' : ''), msg);
+    $('#toasts').appendChild(t);
+    setTimeout(function () { t.remove(); }, 4000);
+  }
+  function matchesFilters(p) {
+    if (filters.priority && p.priority !== filters.priority) return false;
+    if (filters.dept && p.dept !== filters.dept) return false;
+    if (filters.q) {
+      const hay = [p.id, p.title, p.owner, p.dept, p.tags.join(' ')].join(' ').toLowerCase();
+      if (hay.indexOf(filters.q) === -1) return false;
+    }
+    return true;
+  }
+
+  // ---- Rendering -----------------------------------------------------------
+  function renderSummary() {
+    const s = $('#summary');
+    s.textContent = '';
+    const active = projects.filter(function (p) { return p.status !== 'done'; });
+    const budget = active.reduce(function (sum, p) { return sum + (Number(p.budget) || 0); }, 0);
+    const overdue = projects.filter(isOverdue).length;
+    const red = active.filter(function (p) { return p.rag === 'Red'; }).length;
+    const stats = [
+      ['Total projects', String(projects.length)],
+      ['Active', String(active.length)],
+      ['Active budget', sgdShort.format(budget)],
+      ['Overdue', String(overdue), overdue > 0],
+      ['Red status', String(red), red > 0]
+    ];
+    stats.forEach(function (st) {
+      const box = el('div', 'stat' + (st[2] ? ' warn' : ''));
+      box.appendChild(el('div', 'label', st[0]));
+      box.appendChild(el('div', 'value', st[1]));
+      s.appendChild(box);
+    });
+  }
+
+  function renderCard(p) {
+    const c = el('article', 'card p-' + p.priority);
+    c.tabIndex = 0;
+    c.draggable = true;
+    c.dataset.id = p.id;
+    c.setAttribute('role', 'button');
+    c.setAttribute('aria-label', p.id + ': ' + p.title + ', ' + p.priority + ' priority, ' + p.rag + ' status, stage ' + columnName(p.status));
+
+    const top = el('div', 'card-top');
+    top.appendChild(el('span', 'card-id', p.id));
+    top.appendChild(el('span', 'pill p-' + p.priority, p.priority));
+    c.appendChild(top);
+
+    c.appendChild(el('h3', 'card-title', p.title));
+
+    const meta1 = el('div', 'card-meta');
+    meta1.appendChild(el('span', null, p.dept));
+    meta1.appendChild(el('span', 'rag ' + p.rag, p.rag));
+    c.appendChild(meta1);
+
+    const prog = el('div', 'progress');
+    prog.title = p.progress + '% complete';
+    const bar = el('div');
+    bar.style.width = Math.max(0, Math.min(100, p.progress)) + '%';
+    prog.appendChild(bar);
+    c.appendChild(prog);
+
+    const meta2 = el('div', 'card-meta');
+    const owner = el('span', 'owner');
+    owner.appendChild(el('span', 'avatar', initials(p.owner)));
+    owner.appendChild(el('span', null, p.owner || 'Unassigned'));
+    meta2.appendChild(owner);
+    const due = el('span', 'due' + (isOverdue(p) ? ' overdue' : ''), (isOverdue(p) ? '⚠ ' : '◷ ') + formatDate(p.due));
+    if (isOverdue(p)) due.title = 'Overdue';
+    meta2.appendChild(due);
+    c.appendChild(meta2);
+
+    if (p.tags.length) {
+      const tags = el('div', 'tags');
+      p.tags.forEach(function (t) { tags.appendChild(el('span', 'tag', t)); });
+      c.appendChild(tags);
+    }
+    return c;
+  }
+
+  function render(focusId) {
+    const board = $('#board');
+    board.textContent = '';
+    COLUMNS.forEach(function (col) {
+      const all = projects.filter(function (p) { return p.status === col.key; });
+      const shown = all.filter(matchesFilters);
+      const over = col.wip && all.length > col.wip;
+
+      const section = el('section', 'column' + (over ? ' over-wip' : ''));
+      section.dataset.status = col.key;
+      section.setAttribute('aria-label', col.name);
+
+      const head = el('div', 'column-header');
+      head.appendChild(el('h2', null, col.name));
+      const countText = (shown.length !== all.length ? shown.length + '/' : '') + all.length + (col.wip ? ' · WIP ' + col.wip : '');
+      const count = el('span', 'count', countText);
+      if (over) count.title = 'Work-in-progress limit exceeded';
+      head.appendChild(count);
+      section.appendChild(head);
+
+      const body = el('div', 'column-body');
+      if (!shown.length) body.appendChild(el('div', 'empty', all.length ? 'No cards match the filters' : 'Drop cards here'));
+      shown.forEach(function (p) { body.appendChild(renderCard(p)); });
+      section.appendChild(body);
+      board.appendChild(section);
+    });
+    renderSummary();
+    if (focusId) {
+      const card = board.querySelector('.card[data-id="' + focusId + '"]');
+      if (card) card.focus();
+    }
+  }
+
+  // ---- Moving cards --------------------------------------------------------
+  function moveProject(id, status, beforeId) {
+    const idx = projects.findIndex(function (p) { return p.id === id; });
+    if (idx === -1) return;
+    const p = projects.splice(idx, 1)[0];
+    const prevStatus = p.status;
+    p.status = status;
+    if (status === 'done') p.progress = 100;
+    let insertAt = projects.length;
+    if (beforeId) {
+      const b = projects.findIndex(function (q) { return q.id === beforeId; });
+      if (b !== -1) insertAt = b;
+    } else {
+      // Append after the last card already in the target column.
+      for (let i = projects.length - 1; i >= 0; i--) {
+        if (projects[i].status === status) { insertAt = i + 1; break; }
+      }
+    }
+    projects.splice(insertAt, 0, p);
+    if (prevStatus !== status) toast(p.id + ' moved to ' + columnName(status));
+  }
+
+  const board = $('#board');
+
+  board.addEventListener('dragstart', function (e) {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    draggedId = card.dataset.id;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', draggedId);
+  });
+  board.addEventListener('dragend', function (e) {
+    const card = e.target.closest('.card');
+    if (card) card.classList.remove('dragging');
+    board.querySelectorAll('.drag-over').forEach(function (c) { c.classList.remove('drag-over'); });
+    draggedId = null;
+  });
+  board.addEventListener('dragover', function (e) {
+    const col = e.target.closest('.column');
+    if (!col || !draggedId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    board.querySelectorAll('.drag-over').forEach(function (c) { if (c !== col) c.classList.remove('drag-over'); });
+    col.classList.add('drag-over');
+  });
+  board.addEventListener('dragleave', function (e) {
+    const col = e.target.closest('.column');
+    if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+  });
+  board.addEventListener('drop', function (e) {
+    const col = e.target.closest('.column');
+    if (!col || !draggedId) return;
+    e.preventDefault();
+    // Find the first card whose vertical midpoint is below the pointer.
+    const cards = Array.prototype.slice.call(col.querySelectorAll('.card:not(.dragging)'));
+    const before = cards.find(function (c) {
+      const r = c.getBoundingClientRect();
+      return e.clientY < r.top + r.height / 2;
+    });
+    const id = draggedId;
+    moveProject(id, col.dataset.status, before ? before.dataset.id : null);
+    draggedId = null;
+    render();
+  });
+
+  board.addEventListener('keydown', function (e) {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const id = card.dataset.id;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openDetail(id);
+    } else if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      e.preventDefault();
+      const p = findProject(id);
+      const i = COLUMNS.findIndex(function (c) { return c.key === p.status; });
+      const j = i + (e.key === 'ArrowRight' ? 1 : -1);
+      if (j < 0 || j >= COLUMNS.length) return;
+      moveProject(id, COLUMNS[j].key, null);
+      render(id);
+    }
+  });
+  board.addEventListener('click', function (e) {
+    const card = e.target.closest('.card');
+    if (card) openDetail(card.dataset.id);
+  });
+
+  // ---- Dialog plumbing -----------------------------------------------------
+  let lastFocus = null;
+  function openDialog(dlg) {
+    lastFocus = document.activeElement;
+    dlg.showModal();
+  }
+  function closeDialog(dlg) {
+    if (dlg.open) dlg.close();
+  }
+  document.querySelectorAll('dialog').forEach(function (dlg) {
+    dlg.addEventListener('close', function () {
+      if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
+      else if (editingId) {
+        const c = board.querySelector('.card[data-id="' + editingId + '"]');
+        if (c) c.focus();
+      }
+    });
+    dlg.addEventListener('click', function (e) {
+      if (e.target.closest('[data-close]')) closeDialog(dlg);
+      else if (e.target === dlg) closeDialog(dlg); // backdrop click
+    });
+  });
+
+  // ---- Detail / edit -------------------------------------------------------
+  const formDetail = $('#form-detail');
+  fillSelect($('#d-status'), COLUMNS.map(function (c) { return c.key; }), COLUMNS.map(function (c) { return c.name; }));
+  fillSelect($('#d-priority'), PRIORITIES);
+  fillSelect($('#d-rag'), RAGS);
+  fillSelect($('#d-dept'), DEPARTMENTS);
+
+  function openDetail(id) {
+    const p = findProject(id);
+    if (!p) return;
+    editingId = id;
+    $('#detail-title').textContent = p.id + ' — ' + p.title;
+    const f = formDetail.elements;
+    f.title.value = p.title;
+    f.status.value = p.status;
+    f.priority.value = p.priority;
+    f.rag.value = p.rag;
+    f.dept.value = p.dept;
+    f.owner.value = p.owner;
+    f.due.value = p.due || '';
+    f.progress.value = p.progress;
+    f.budget.value = p.budget || '';
+    f.tags.value = p.tags.join(', ');
+    f.description.value = p.description || '';
+    openDialog($('#dlg-detail'));
+  }
+
+  formDetail.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const f = formDetail.elements;
+    f.title.value = f.title.value.trim();
+    if (!formDetail.reportValidity()) return;
+    const p = findProject(editingId);
+    if (!p) return;
+    const newStatus = f.status.value;
+    p.title = f.title.value;
+    p.priority = f.priority.value;
+    p.rag = f.rag.value;
+    p.dept = f.dept.value;
+    p.owner = f.owner.value.trim();
+    p.due = f.due.value;
+    p.progress = Math.max(0, Math.min(100, parseInt(f.progress.value, 10) || 0));
+    p.budget = Math.max(0, Number(f.budget.value) || 0);
+    p.tags = parseTags(f.tags.value);
+    p.description = f.description.value.trim();
+    if (newStatus !== p.status) moveProject(p.id, newStatus, null);
+    closeDialog($('#dlg-detail'));
+    render(p.id);
+    toast(p.id + ' updated');
+  });
+
+  $('#btn-delete').addEventListener('click', function () {
+    const p = findProject(editingId);
+    if (!p) return;
+    if (!confirm('Delete ' + p.id + ' "' + p.title + '" from the board?\n(Demo only — a refresh restores the sample data.)')) return;
+    projects = projects.filter(function (q) { return q.id !== p.id; });
+    lastFocus = null;
+    editingId = null;
+    closeDialog($('#dlg-detail'));
+    render();
+    toast(p.id + ' deleted');
+  });
+
+  // ---- New project request (FormSubmit) ------------------------------------
+  const formNew = $('#form-new');
+  const btnSubmit = $('#btn-submit-new');
+  const btnLocal = $('#btn-add-local');
+  const errBox = $('#new-error');
+  const isConfigured = FORMSUBMIT_EMAIL !== FORMSUBMIT_PLACEHOLDER;
+  fillSelect($('#n-dept'), DEPARTMENTS);
+  fillSelect($('#n-priority'), PRIORITIES);
+  $('#n-priority').value = 'Medium';
+  $('#new-config-warn').classList.toggle('hidden', isConfigured);
+
+  function resetNewForm() {
+    formNew.reset();
+    $('#n-priority').value = 'Medium';
+    errBox.classList.add('hidden');
+    errBox.textContent = '';
+    btnLocal.classList.toggle('hidden', isConfigured);
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = 'Submit request';
+  }
+
+  $('#btn-new').addEventListener('click', function () {
+    resetNewForm();
+    editingId = null;
+    openDialog($('#dlg-new'));
+    $('#n-title').focus();
+  });
+
+  function readNewForm() {
+    const f = formNew.elements;
+    return {
+      project_title: f.project_title.value.trim(),
+      requester_name: f.requester_name.value.trim(),
+      email: f.email.value.trim(),
+      department: f.department.value,
+      priority: f.priority.value,
+      target_date: f.target_date.value,
+      estimated_budget: f.estimated_budget.value,
+      business_justification: f.business_justification.value.trim(),
+      _honey: f._honey.value
+    };
+  }
+
+  function validateNewForm() {
+    const f = formNew.elements;
+    ['project_title', 'requester_name', 'business_justification'].forEach(function (n) { f[n].value = f[n].value.trim(); });
+    return formNew.reportValidity();
+  }
+
+  function addRequestToBoard(d, sent) {
+    const id = 'PRJ-' + (nextIdNum++);
+    projects.push({
+      id: id,
+      title: d.project_title,
+      status: 'backlog',
+      priority: d.priority,
+      rag: 'Green',
+      dept: d.department,
+      owner: d.requester_name,
+      due: d.target_date,
+      progress: 0,
+      budget: Math.max(0, Number(d.estimated_budget) || 0),
+      tags: ['request'],
+      description: d.business_justification + (sent ? '' : '\n\n(Not sent to FormSubmit — added locally.)')
+    });
+    lastFocus = null;
+    closeDialog($('#dlg-new'));
+    render(id);
+    toast(sent ? 'Request submitted and added to Backlog as ' + id : id + ' added to Backlog (not sent)');
+  }
+
+  function showSubmitError(msg) {
+    errBox.textContent = msg;
+    errBox.classList.remove('hidden');
+    btnLocal.classList.remove('hidden');
+  }
+
+  formNew.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!validateNewForm()) return;
+    const d = readNewForm();
+    if (d._honey) return; // bot trap
+
+    errBox.classList.add('hidden');
+    if (!isConfigured) {
+      showSubmitError('Not sent: FormSubmit email is still the placeholder. Configure FORMSUBMIT_EMAIL, or add this request to the board locally.');
+      return;
+    }
+
+    const payload = {
+      _subject: 'New IT project request: ' + d.project_title,
+      _template: 'table',
+      _captcha: 'false',
+      _honey: d._honey,
+      'Project title': d.project_title,
+      'Requester name': d.requester_name,
+      email: d.email,
+      Department: d.department,
+      Priority: d.priority,
+      'Target date': d.target_date || 'Not specified',
+      'Estimated budget (SGD)': d.estimated_budget ? sgd.format(Number(d.estimated_budget)) : 'Not specified',
+      'Business justification': d.business_justification
+    };
+
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = '⏳ Sending…';
+    fetch(FORMSUBMIT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (body) {
+          return { ok: res.ok, body: body };
+        });
+      })
+      .then(function (r) {
+        if (r.ok && String(r.body.success) === 'true') {
+          addRequestToBoard(d, true);
+        } else {
+          showSubmitError('FormSubmit did not accept the request: ' + (r.body.message || 'unknown error') + '.');
+        }
+      })
+      .catch(function (err) {
+        showSubmitError('Could not reach FormSubmit (' + (err && err.message ? err.message : 'network error') + '). Check your connection — some browsers also block requests from pages opened via file://.');
+      })
+      .finally(function () {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Submit request';
+      });
+  });
+
+  btnLocal.addEventListener('click', function () {
+    if (!validateNewForm()) return;
+    addRequestToBoard(readNewForm(), false);
+  });
+
+  // ---- Filters -------------------------------------------------------------
+  fillSelect($('#filter-priority'), PRIORITIES);
+  fillSelect($('#filter-dept'), DEPARTMENTS);
+  $('#search').addEventListener('input', function (e) { filters.q = e.target.value.trim().toLowerCase(); render(); });
+  $('#filter-priority').addEventListener('change', function (e) { filters.priority = e.target.value; render(); });
+  $('#filter-dept').addEventListener('change', function (e) { filters.dept = e.target.value; render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
